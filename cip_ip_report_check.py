@@ -28,7 +28,7 @@ def fetch_ip_report(api_key: str, ip: str, timeout: int = 20) -> Dict[str, Any]:
         "x-api-key": api_key,
         "Accept": "application/json",
     }
-    params = {"ip": ip, "full": "true"}  # 또는 True
+    params = {"ip": ip, "full": "true"}  # or True
 
     r = requests.get(API_URL, headers=headers, params=params, timeout=timeout)
     if r.status_code != 200:
@@ -90,8 +90,8 @@ def extract_ports(data: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 def extract_vuln_tags(data: Dict[str, Any]) -> List[str]:
     """
-    tags 위치: port.data[].tags (list)
-    - tags가 list[str] 뿐 아니라 list[dict] / str 로 올 수도 있어서 방어적으로 처리
+    tags location: port.data[].tags (list)
+    - Process defensively because tags may arrive not only as list[str], but also as list[dict] or str
     """
     tags: List[str] = []
 
@@ -104,7 +104,7 @@ def extract_vuln_tags(data: Dict[str, Any]) -> List[str]:
                 if isinstance(x, str) and x.strip():
                     tags.append(x.strip())
                 elif isinstance(x, dict):
-                    # 혹시 dict로 오는 경우 대비
+                    # Handle cases where the tag is returned as a dict
                     v = x.get("tag") or x.get("name") or x.get("label") or x.get("title")
                     if isinstance(v, str) and v.strip():
                         tags.append(v.strip())
@@ -137,7 +137,7 @@ def extract_ssl_keywords(data: Dict[str, Any]) -> List[str]:
 
 def is_public_ip(ip: str) -> bool:
     """
-    Reliable public/private 판단은 응답에 의존하지 말고 ipaddress로 처리.
+    For reliable public/private classification, do not rely on the API response; use ipaddress instead.
     - is_global: public routable (best for your “public IP” check)
     """
     try:
@@ -179,7 +179,7 @@ def extract_anonymity_hits(data: Dict[str, Any]) -> List[str]:
     if issues.get("is_proxy"):
         hits.add("proxy")
 
-    # (B) ip_category types (이 케이스 핵심)
+    # (B) ip_category types (this is the key case here)
     for t in extract_ip_categories(data):
         tl = t.lower()
         if tl in ("proxy", "vpn", "tor", "anonymous_vpn", "anonymous vpn"):
@@ -226,7 +226,7 @@ def evaluate_rules(
 
     # 5) vpn/anonymous vpn/tor/proxy (issues flags)
     # 5) vpn/anonymous vpn/tor/proxy
-    hit = extract_anonymity_hits(data)   # ← 이미 ["proxy"] 같은 리스트로 반환됨
+    hit = extract_anonymity_hits(data)   # ← already returned as a list like ["proxy"]
     if hit:
         reasons.append(f"[Anonymity] {', '.join(hit)}")
 
@@ -257,7 +257,7 @@ def evaluate_rules(
             reasons.append(f"[Service] OpenSSH detected on non-22 port(s): {non22}")
 
     # 7) dest port 55 AND public IP
-    # (DNS 위조 의심)
+    # (suspected DNS spoofing)
     if dest_port == 55:
         if is_public_ip(dest_ip):
             reasons.append("[DNS] destination port 55 + public IP (DNS spoofing suspicion)")
