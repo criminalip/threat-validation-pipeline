@@ -89,7 +89,7 @@ An IP may be classified as suspicious if one or more of the following conditions
 
 All IP validations are performed using the following endpoint:
 
-https://search.criminalip.io/developer/api/get-asset-ip-report
+https://api.criminalip.io/v1/asset/ip/report
 
 Ensure proper authentication headers are included in production deployments.
 
